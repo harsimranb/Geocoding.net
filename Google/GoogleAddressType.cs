@@ -1,5 +1,3 @@
-using System;
-
 namespace Geocoding.Google
 {
 	/// <remarks>
@@ -30,6 +28,14 @@ namespace Geocoding.Google
 		PostBox,
 		StreetNumber,
 		Floor,
-		Room
+		Room,
+		PostalTown,
+		Establishment,
+		SubLocalityLevel1,
+		SubLocalityLevel2,
+		SubLocalityLevel3,
+		SubLocalityLevel4,
+		SubLocalityLevel5,
+		PostalCodeSuffix
 	}
 }

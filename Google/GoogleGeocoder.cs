@@ -61,7 +61,7 @@ namespace Geocoding.Google
 			}
 		}
 
-		public WebProxy Proxy { get; set; }
+		public IWebProxy Proxy { get; set; }
 		public string Language { get; set; }
 		public string RegionBias { get; set; }
 		public Bounds BoundsBias { get; set; }
@@ -313,7 +313,10 @@ namespace Geocoding.Google
 				url = BusinessKey.GenerateSignature(url);
 
 			var req = WebRequest.Create(url) as HttpWebRequest;
-			req.Proxy = Proxy;
+			if (this.Proxy != null)
+			{
+				req.Proxy = Proxy;
+			}
 			req.Method = "GET";
 			return req;
 		}
@@ -368,10 +371,12 @@ namespace Geocoding.Google
 
 				var viewport = new GoogleViewport { Northeast = neCoordinates, Southwest = swCoordinates };
 
+                GoogleLocationType locationType = EvaluateLocationType((string)nav.Evaluate("string(geometry/location_type)"));
+
 				bool isPartialMatch;
 				bool.TryParse((string)nav.Evaluate("string(partial_match)"), out isPartialMatch);
 
-				yield return new GoogleAddress(type, formattedAddress, components, coordinates, viewport, isPartialMatch);
+				yield return new GoogleAddress(type, formattedAddress, components, coordinates, viewport, isPartialMatch, locationType);
 			}
 		}
 
@@ -442,10 +447,34 @@ namespace Geocoding.Google
 				case "street_number": return GoogleAddressType.StreetNumber;
 				case "floor": return GoogleAddressType.Floor;
 				case "room": return GoogleAddressType.Room;
+				case "postal_town": return GoogleAddressType.PostalTown;
+				case "establishment": return GoogleAddressType.Establishment;
+				case "sublocality_level_1": return GoogleAddressType.SubLocalityLevel1;
+				case "sublocality_level_2": return GoogleAddressType.SubLocalityLevel2;
+				case "sublocality_level_3": return GoogleAddressType.SubLocalityLevel3;
+				case "sublocality_level_4": return GoogleAddressType.SubLocalityLevel4;
+				case "sublocality_level_5": return GoogleAddressType.SubLocalityLevel5;
+				case "postal_code_suffix": return GoogleAddressType.PostalCodeSuffix;
 
 				default: return GoogleAddressType.Unknown;
 			}
 		}
+
+        /// <remarks>
+        /// https://developers.google.com/maps/documentation/geocoding/?csw=1#Results
+        /// </remarks>
+        private GoogleLocationType EvaluateLocationType(string type)
+        {
+            switch (type)
+            {
+                case "ROOFTOP": return GoogleLocationType.Rooftop;
+                case "RANGE_INTERPOLATED": return GoogleLocationType.RangeInterpolated;
+                case "GEOMETRIC_CENTER": return GoogleLocationType.GeometricCenter;
+                case "APPROXIMATE": return GoogleLocationType.Approximate;
+
+                default: return GoogleLocationType.Unknown;
+            }
+        }
 
 		protected class RequestState
 		{
